@@ -1,17 +1,40 @@
 const express = require('express');
-const { Record } = require('../models/records');
+const Joi = require('@hapi/joi');
 const router = express.Router();
-// const { httpCodes } = require('../constants');
-// const { logger } = require('../startup/logging');
+const { Record } = require('../models/records');
+const { responseStatusMapping } = require('../constants');
+const { logger } = require('../startup/logging');
+const { validate } = require('../utils/validation')
 
-/** Get API for fetching counts data */
-router.post('/getCounts', async (req, res, next) => {
+/** Get API for fetching records matching provided conditions */
+router.post('/getRecords', async (req, res, next) => {
+
+  /**
+   * Validate Reqeuest 
+   */
+  const validationSchema = {
+    startDate: Joi.string().required(),
+    endDate: Joi.string().required(),
+    minCount: Joi.number().required(),
+    maxCount: Joi.number().required()
+  }
+  const validationResult = validate(req.body, validationSchema);
+  if(validationResult.error)
+    return res.status(400).send({
+        code:responseStatusMapping.failure.code,
+        msg:responseStatusMapping.failure.msg,
+        error:`Bad Request : ${validationResult.error.message}`
+      });
+
+  /**
+   * Fetch records from Database using aggregation 
+   */
 
   Record.aggregate([
     {
       $project: {
+        _id:0,
         key:1, 
-        value:1, 
         createdAt:1,
         totalCount:{$sum:"$counts"}
       }
@@ -23,9 +46,22 @@ router.post('/getCounts', async (req, res, next) => {
     }
   ])
   .then((result) => {
-      return res.status(200).send(result);
+      const responseObj = {
+        code:responseStatusMapping.success.code,
+        msg:responseStatusMapping.success.msg,
+        records:[...result]
+      }
+      return res.status(200).send(responseObj);
     })
-  .catch(error => res.send(error.message))
+  .catch(err => {
+    logger.error(err.message, err);
+    const errorObj = {
+      code:responseStatusMapping.failure.code,
+      msg:responseStatusMapping.failure.msg,
+      error:err.message
+    }
+    res.status(500).send(errorObj)
+  })
 })
 
 module.exports = router;

@@ -8,7 +8,7 @@ require('./startup/database').connectDB();
 
 const port = process.env.PORT || 3000;
 
-app.listen(port, () => {
+const server = app.listen(port, () => {
   logger.info(`Server is listening on port ${port}`);
 })
 
@@ -24,3 +24,5 @@ app.use(function(req, res, next) {
 app.use(express.json());
 app.use(morgan('tiny'));
 app.use('/api', route)
+
+module.exports = server;

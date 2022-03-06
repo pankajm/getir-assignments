@@ -8,7 +8,7 @@ const recordsSchema = new mongoose.Schema({
     type: String,
   },
   createdAt: {
-    type: String,
+    type: Date,
   },
   counts:{
     type: Array

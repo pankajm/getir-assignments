@@ -1,8 +1,6 @@
 // const logger = require('../models/logger');
 const { createLogger, format, transports } = require('winston');
 const { combine, timestamp, prettyPrint } = format;
-// require('winston-mongodb');
-
 
 /* Node JS way to log errors (outside request response cycle) at central place */
 
@@ -16,6 +14,10 @@ function registerGlobalLogging () {
     logger.error(ex.message, ex);  
   })
 }
+
+/**
+ * Logger module to log errors and information in file and console respectively
+ */
 
 const logger = createLogger ({
 
@@ -40,7 +42,6 @@ const logger = createLogger ({
     })
   ]
 })
-
 
 module.exports.registerGlobalLogging = registerGlobalLogging;
 module.exports.logger = logger;
